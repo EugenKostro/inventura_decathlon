@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
-
+/*definiranje komponente artikl*/ 
 const Artikli = () => {
+  /*polje artikala*/
   const artikli = [
     { id: 1, naziv: 'nogometna_lopta', status: '✅' },
     { id: 2, naziv: 'kopačke', status: '✅' },
     { id: 3, naziv: 'štitnici', status: '❌' }
   ];
-
+/*korištenje useStatea za stanje komponente */
   const [prikazaniArtikli, setPrikazaniArtikli] = useState([]);
-
+/*funkcija za prikazivanje sljedećeg artikla */
   const prikaziSljedeciArtikl = () => {
+    /*provjeravanje ima li još artikala u listi */
     if (prikazaniArtikli.length < artikli.length) {
+      /*dodavanje sljedećeg artikla pomoću spread operatora */
       setPrikazaniArtikli(prevPrikazani => [
         ...prevPrikazani,
         artikli[prikazaniArtikli.length]
       ]);
     }
   };
-
+/*Dizajn */
   return (
     <div style={{ textAlign: 'center' }}>
       <h2>Lista Artikala</h2>
