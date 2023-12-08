@@ -1,69 +1,91 @@
-import React, { useState } from 'react';
-/*definiranje komponente artikl*/ 
+import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from 'react-router-dom';
+import "./App.css";
+
 const Artikli = () => {
-  /*polje artikala*/
-  const artikli = [
-    { id: 1, naziv: 'nogometna_lopta', status: '✅' },
-    { id: 2, naziv: 'kopačke', status: '✅' },
-    { id: 3, naziv: 'štitnici', status: '❌' }
-  ];
-/*korištenje useStatea za stanje komponente */
   const [prikazaniArtikli, setPrikazaniArtikli] = useState([]);
-/*funkcija za prikazivanje sljedećeg artikla */
+  const [indeksTrenutnogArtikla, setIndeksTrenutnogArtikla] = useState(0);
+  const [artikli, setArtikli] = useState([]);
+  const zadnjiArtiklRef = useRef(null);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const q = queryParams.get('q');
+
+  useEffect(() => {
+    fetch("/eugen/inventura_decathlon/build/artikliData.json")
+      .then((response) => response.json())
+      .then((data) => {
+        setArtikli(data);
+        setPrikazaniArtikli([data[0]]);
+      })
+      .catch((error) => console.error("Greška pri dohvaćanju liste: ", error.message));
+  }, []);
+
   const prikaziSljedeciArtikl = () => {
-    /*provjeravanje ima li još artikala u listi */
-    if (prikazaniArtikli.length < artikli.length) {
-      /*dodavanje sljedećeg artikla pomoću spread operatora */
-      setPrikazaniArtikli(prevPrikazani => [
-        ...prevPrikazani,
-        artikli[prikazaniArtikli.length]
+    if (indeksTrenutnogArtikla < artikli.length - 1) {
+      const noviIndeks = indeksTrenutnogArtikla + 1;
+      setIndeksTrenutnogArtikla(noviIndeks);
+      setPrikazaniArtikli((prevPrikazaniArtikli) => [
+        ...prevPrikazaniArtikli,
+        artikli[noviIndeks],
       ]);
     }
+    zadnjiArtiklRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-/*Dizajn */
+
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h2>Lista Artikala</h2>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-        <button style={{
-          backgroundColor: '#0078b8',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          padding: '10px 20px',
-          cursor: 'pointer'
-        }} onClick={prikaziSljedeciArtikl}>
-          Prikaži Sljedeći Artikl
-        </button>
+    <div className="body-content">
+      <div className="query-string-display">Query String: {q}</div>
+      <div className="header">
+        <img
+          src="/eugen/inventura_decathlon/build/logo-decathlon-blue.svg"
+          alt="Decathlon Logo"
+          className="logo"
+        />
+        <h1 className="header-title">INVENTURNA LISTA</h1>
       </div>
-      {prikazaniArtikli.length > 0 && (
-        <table style={{
-          margin: 'auto',
-          borderCollapse: 'collapse',
-          border: '1px solid black',
-          width: '60%', 
-          maxWidth: '600px', 
-        }}>
-          <thead>
-            <tr>
-              <th style={{ border: '1px solid black', textAlign: 'left', padding: '5px' }}>ID</th>
-              <th style={{ border: '1px solid black', textAlign: 'right', padding: '5px' }}>Naziv</th>
-              <th style={{ border: '1px solid black', textAlign: 'center', padding: '5px' }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prikazaniArtikli.map((artikl) => (
-              <tr key={artikl.id}>
-                <td style={{ border: '1px solid black', textAlign: 'left', padding: '5px' }}>{artikl.id}</td>
-                <td style={{ border: '1px solid black', textAlign: 'right', padding: '5px' }}>{artikl.naziv}</td>
-                <td style={{ border: '1px solid black', textAlign: 'center', padding: '5px', color: artikl.status === '✅' ? 'green' : 'red' }}>
-                  {artikl.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div style={{ textAlign: "center", marginTop: "100px" }}>
+        {prikazaniArtikli.length > 0 && (
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th style={{ textAlign: "left" }}>Naziv</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prikazaniArtikli.map((artikl, index) => (
+                  <tr
+                    key={artikl.id}
+                    ref={
+                      index === prikazaniArtikli.length - 1
+                        ? zadnjiArtiklRef
+                        : null
+                    }
+                  >
+                    <td>{artikl.id}</td>
+                    <td style={{ textAlign: "left" }}>{artikl.naziv}</td>
+                    <td
+                      className={
+                        artikl.status === "✅" ? "status-ok" : "status-not-ok"
+                      }
+                    >
+                      {artikl.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="button-container">
+          <button className="button-show-more" onClick={prikaziSljedeciArtikl}>
+            Prikaži sljedeći artikl
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
